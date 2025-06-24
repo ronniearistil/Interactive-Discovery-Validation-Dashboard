@@ -1,275 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinnixPro - Discovery & Validation Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0fdfa; /* A very light teal background */ }
-        .theme-teal { color: #0d9488; } /* Teal-600 */
-        .bg-theme-teal { background-color: #0d9488; }
-        .bg-theme-teal-hover:hover { background-color: #0f766e; } /* Teal-700 */
-        .ring-theme-teal:focus { ring-color: #0d9488; }
-        
-        .kpi-card { background-color: #ffffff; padding: 1rem; border-radius: 0.75rem; text-align: center; border: 1px solid #ccfbf1; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.03); }
-        .tag { display: inline-block; background-color: #f0fdfa; color: #115e59; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; margin: 0.125rem; border: 1px solid #ccfbf1;}
-        
-        td, th { padding: 1rem 1.5rem; }
-        .modal { display: none; }
-        .modal.is-open { display: flex; }
-
-        /* Status Colors */
-        .status-select { border-radius: 0.375rem; padding: 0.25rem 0.5rem; border-width: 1px; font-weight: 500;}
-        .status-Identified { background-color: #f1f5f9; color: #475569; border-color: #e2e8f0; }
-        .status-Outreach-Sent { background-color: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
-        .status-Scheduled { background-color: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
-        .status-Interviewed { background-color: #ccfbf1; color: #047857; border-color: #99f6e4; }
-        .status-Onboarding { background-color: #a7f3d0; color: #065f46; border-color: #6ee7b7; }
-        .status-Declined, .status-No-Response { background-color: #fee2e2; color: #991b1b; border-color: #fecaca;}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinnixPro — Funding Allocation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0fdfa;
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    #chart-container {
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 0.75rem;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .color-box {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 0.25rem;
+      margin-right: 0.75rem;
+    }
+    .input-label {
+      flex: 1;
+      font-weight: 500;
+      color: #334155;
+    }
+    .percent-input {
+      width: 60px;
+      text-align: right;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 1rem;
+    }
+    .percent-sign {
+      margin-left: 0.5rem;
+      font-size: 1rem;
+      color: #64748b;
+    }
+    #total-percent-warning {
+      color: #dc2626;
+      font-weight: 500;
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+    }
+  </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
+  <div id="chart-container">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">$500k to Ignite GTM Execution</h1>
+    <p class="text-center text-gray-500 mb-8">Pre-seed SAFE funding for an 18-month runway.</p>
 
-    <div class="max-w-screen-2xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-        <!-- Header Section -->
-        <div class="mb-6 pb-4 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800 flex items-center"><span class="text-2xl font-bold mr-3 rounded-md bg-teal-600 p-2 text-white">fp</span>FinnixPro Discovery Dashboard</h1>
-            <p class="text-gray-600 mt-1">A real-time dashboard to track Phase 1 progress. Data is saved automatically.</p>
-        </div>
-
-        <!-- KPI Dashboard -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Total Prospects</p><p id="kpi-total" class="text-3xl font-bold text-gray-800">0</p></div>
-            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Interviews Done</p><p id="kpi-interviews" class="text-3xl font-bold theme-teal">0</p></div>
-            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Paying Customers</p><p id="kpi-customers" class="text-3xl font-bold theme-teal">0</p></div>
-            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Current MRR</p><p id="kpi-mrr" class="text-3xl font-bold theme-teal">$0</p></div>
-        </div>
-        
-        <!-- Controls -->
-        <div class="flex justify-end items-center mb-4">
-            <button id="add-prospect-btn" class="bg-theme-teal text-white font-semibold px-5 py-2 rounded-lg bg-theme-teal-hover focus:outline-none focus:ring-2 ring-theme-teal focus:ring-offset-2 transition-all shadow-sm hover:shadow-md">
-                + Add New Prospect
-            </button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <!-- Input Sliders -->
+      <div id="inputs-container">
+        <!-- GTM Strategy -->
+        <div class="input-group">
+          <div class="color-box" style="background-color: #0d9488;"></div>
+          <label for="gtm-input" class="input-label">GTM & Revenue Growth</label>
+          <input type="number" id="gtm-input" class="percent-input" value="40" />
+          <span class="percent-sign">%</span>
         </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto border border-gray-200 rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prospect</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interview Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Follow-up</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pain Points</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quote</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
-                    <!-- Dynamic Rows -->
-                </tbody>
-            </table>
+        <!-- Product Development -->
+        <div class="input-group">
+          <div class="color-box" style="background-color: #2dd4bf;"></div>
+          <label for="product-input" class="input-label">Product Development</label>
+          <input type="number" id="product-input" class="percent-input" value="35" />
+          <span class="percent-sign">%</span>
         </div>
+
+        <!-- Strategic Hires -->
+        <div class="input-group">
+          <div class="color-box" style="background-color: #5eead4;"></div>
+          <label for="hires-input" class="input-label">Key Strategic Hires</label>
+          <input type="number" id="hires-input" class="percent-input" value="20" />
+          <span class="percent-sign">%</span>
+        </div>
+
+        <!-- Legal & Runway -->
+        <div class="input-group">
+          <div class="color-box" style="background-color: #99f6e4;"></div>
+          <label for="legal-input" class="input-label">Legal, Ops & Runway Buffer</label>
+          <input type="number" id="legal-input" class="percent-input" value="5" />
+          <span class="percent-sign">%</span>
+        </div>
+
+        <div id="total-percent-warning">Total must be 100%</div>
+      </div>
+
+      <!-- Donut Chart -->
+      <div class="relative w-full" style="padding-top: 100%;">
+        <svg id="donut-chart" class="absolute top-0 left-0 w-full h-full" viewBox="0 0 100 100"></svg>
+        <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none">
+          <div class="text-center">
+            <p class="text-4xl font-bold text-gray-800">$500k</p>
+            <p class="text-lg text-gray-500">Pre-Seed SAFE</p>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Add/Edit Modal -->
-    <div id="prospect-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center">
-        <div class="relative mx-auto p-8 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="text-left">
-                <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6">Add New Prospect</h3>
-                <form id="prospect-form" class="space-y-4">
-                    <input type="hidden" id="prospect-id">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-medium text-gray-700">Prospect Name</label><input required type="text" id="prospectName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                        <div><label class="block text-sm font-medium text-gray-700">Role / Title</label><input type="text" id="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                    </div>
-                     <div><label class="block text-sm font-medium text-gray-700">Company</label><input type="text" id="company" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div><label class="block text-sm font-medium text-gray-700">Interview Date</label><input type="date" id="interviewDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                         <div><label class="block text-sm font-medium text-gray-700">Next Follow-up Date</label><input type="date" id="followUpDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                    </div>
-                    <div><label class="block text-sm font-medium text-gray-700">Pain Points (comma-separated)</label><input type="text" id="tags" placeholder="e.g., Reporting Delays, Spreadsheet Hell" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Verbatim Quote</label><textarea id="quote" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></textarea></div>
-                    <div class="flex items-center space-x-4 pt-2">
-                        <label for="paying" class="flex items-center text-sm font-medium text-gray-700">
-                            <input type="checkbox" id="paying" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                            <span class="ml-2">Is Paying Customer?</span>
-                        </label>
-                        <div><label class="block text-sm font-medium text-gray-700">MRR ($)</label><input type="number" id="mrr" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
-                    </div>
-                    <div class="pt-4 flex justify-end space-x-3">
-                        <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="bg-theme-teal text-white font-semibold px-4 py-2 rounded-lg bg-theme-teal-hover">Save Prospect</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+  <script>
+    const inputs = {
+      gtm: document.getElementById('gtm-input'),
+      product: document.getElementById('product-input'),
+      hires: document.getElementById('hires-input'),
+      legal: document.getElementById('legal-input'),
+    };
+    const svg = document.getElementById('donut-chart');
+    const warning = document.getElementById('total-percent-warning');
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    const colors = {
+      gtm: '#0d9488',
+      product: '#2dd4bf',
+      hires: '#5eead4',
+      legal: '#99f6e4',
+    };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    function createSegment(offset, dasharray, color) {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", "50");
+      circle.setAttribute("cy", "50");
+      circle.setAttribute("r", radius);
+      circle.setAttribute("fill", "transparent");
+      circle.setAttribute("stroke-width", "12");
+      circle.setAttribute("stroke", color);
+      circle.setAttribute("stroke-dasharray", dasharray);
+      circle.setAttribute("stroke-dashoffset", offset);
+      circle.setAttribute("transform", "rotate(-90 50 50)");
+      return circle;
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let userId;
+    function drawChart() {
+      svg.innerHTML = '';
+      const percentages = {
+        gtm: parseFloat(inputs.gtm.value) || 0,
+        product: parseFloat(inputs.product.value) || 0,
+        hires: parseFloat(inputs.hires.value) || 0,
+        legal: parseFloat(inputs.legal.value) || 0,
+      };
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                setupRealtimeListener();
-            } else {
-                try {
-                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                     } else {
-                        await signInAnonymously(auth);
-                     }
-                } catch (error) { console.error("Authentication failed:", error); }
-            }
-        });
+      const total = Object.values(percentages).reduce((sum, val) => sum + val, 0);
+      warning.style.display = total !== 100 ? 'block' : 'none';
+      if (total !== 100) {
+        warning.textContent = `Total must be 100% (currently ${total}%)`;
+      }
 
-        const statusOptions = ['Identified', 'Outreach Sent', 'Scheduled', 'Interviewed', 'Onboarding', 'Declined', 'No Response'];
-        let prospectData = [];
+      let accumulatedOffset = 0;
+      for (const key in percentages) {
+        const percent = percentages[key];
+        const dasharray = `${(percent / 100) * circumference} ${circumference}`;
+        const segment = createSegment(-accumulatedOffset, dasharray, colors[key]);
+        svg.appendChild(segment);
+        accumulatedOffset += (percent / 100) * circumference;
+      }
+    }
 
-        const tableBody = document.getElementById('table-body');
-        const modal = document.getElementById('prospect-modal');
-        const prospectForm = document.getElementById('prospect-form');
-        const cancelBtn = document.getElementById('cancel-btn');
-        const addProspectBtn = document.getElementById('add-prospect-btn');
-        const modalTitle = document.getElementById('modal-title');
-
-        function setupRealtimeListener() {
-            if (!userId) return;
-            const collectionPath = `artifacts/${appId}/public/data/prospects`;
-            onSnapshot(collection(db, collectionPath), (snapshot) => {
-                prospectData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                prospectData.sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                renderTable();
-                updateKPIs();
-            });
-        }
-        
-        function renderTable() {
-            tableBody.innerHTML = '';
-            prospectData.forEach(item => {
-                const row = document.createElement('tr');
-                const statusClass = `status-${(item.status || 'Identified').replace(/ /g, '-')}`;
-                row.innerHTML = `
-                    <td class="align-top"><div class="text-sm font-semibold text-gray-900">${item.prospectName || ''}</div><div class="text-xs text-gray-500">${item.role || ''}</div></td>
-                    <td class="align-top text-sm text-gray-600">${item.company || ''}</td>
-                    <td class="align-top">
-                        <select class="status-select w-full text-sm ${statusClass}" data-id="${item.id}">
-                            ${statusOptions.map(opt => `<option value="${opt}" ${item.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td class="align-top text-sm text-gray-600">${item.interviewDate || ''}</td>
-                    <td class="align-top text-sm text-gray-600">${item.followUpDate || ''}</td>
-                    <td class="align-top">${(item.tags || '').split(',').map(tag => tag.trim() ? `<span class="tag">${tag.trim()}</span>` : '').join('')}</td>
-                    <td class="align-top"><div class="text-sm text-gray-700 max-w-xs truncate" title="${item.quote || ''}">${item.quote || ''}</div></td>
-                    <td class="align-top text-center space-x-2">
-                        <button class="edit-btn text-teal-600 hover:text-teal-900 text-sm font-medium" data-id="${item.id}">Edit</button>
-                        <button class="delete-btn text-red-600 hover:text-red-900 text-sm font-medium" data-id="${item.id}">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function updateKPIs() {
-             document.getElementById('kpi-total').textContent = prospectData.length;
-             document.getElementById('kpi-interviews').textContent = prospectData.filter(d => d.status === 'Interviewed').length;
-             const payingCustomers = prospectData.filter(d => d.paying);
-             document.getElementById('kpi-customers').textContent = payingCustomers.length;
-             const totalMRR = payingCustomers.reduce((sum, item) => sum + (item.mrr || 0), 0);
-             document.getElementById('kpi-mrr').textContent = `$${totalMRR}`;
-        }
-
-        function openModal(prospect = null) {
-            prospectForm.reset();
-            if (prospect) {
-                modalTitle.textContent = 'Edit Prospect';
-                document.getElementById('prospect-id').value = prospect.id;
-                document.getElementById('prospectName').value = prospect.prospectName || '';
-                document.getElementById('role').value = prospect.role || '';
-                document.getElementById('company').value = prospect.company || '';
-                document.getElementById('interviewDate').value = prospect.interviewDate || '';
-                document.getElementById('followUpDate').value = prospect.followUpDate || '';
-                document.getElementById('tags').value = prospect.tags || '';
-                document.getElementById('quote').value = prospect.quote || '';
-                document.getElementById('paying').checked = prospect.paying || false;
-                document.getElementById('mrr').value = prospect.mrr || 0;
-            } else {
-                modalTitle.textContent = 'Add New Prospect';
-                document.getElementById('prospect-id').value = '';
-            }
-            modal.classList.add('is-open');
-        }
-
-        function closeModal() { modal.classList.remove('is-open'); }
-
-        addProspectBtn.addEventListener('click', () => openModal());
-        cancelBtn.addEventListener('click', closeModal);
-
-        prospectForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!userId) { console.error("User not authenticated."); return; }
-            const collectionPath = `artifacts/${appId}/public/data/prospects`;
-            const id = document.getElementById('prospect-id').value;
-            const data = {
-                prospectName: document.getElementById('prospectName').value,
-                role: document.getElementById('role').value,
-                company: document.getElementById('company').value,
-                interviewDate: document.getElementById('interviewDate').value,
-                followUpDate: document.getElementById('followUpDate').value,
-                tags: document.getElementById('tags').value,
-                quote: document.getElementById('quote').value,
-                paying: document.getElementById('paying').checked,
-                mrr: parseFloat(document.getElementById('mrr').value) || 0,
-                status: prospectData.find(p=>p.id === id)?.status || 'Identified',
-            };
-
-            try {
-                if (id) {
-                    await updateDoc(doc(db, collectionPath, id), data);
-                } else {
-                    data.createdAt = serverTimestamp();
-                    await addDoc(collection(db, collectionPath), data);
-                }
-                closeModal();
-            } catch (error) { console.error("Error saving prospect:", error); }
-        });
-
-        tableBody.addEventListener('click', async (e) => {
-             if (!userId) return;
-             const collectionPath = `artifacts/${appId}/public/data/prospects`;
-             const id = e.target.dataset.id;
-             if (e.target.classList.contains('edit-btn')) { openModal(prospectData.find(p => p.id === id)); }
-             if (e.target.classList.contains('delete-btn')) {
-                 if (confirm('Are you sure you want to delete this prospect?')) {
-                     try { await deleteDoc(doc(db, collectionPath, id)); } catch(error) { console.error("Error deleting prospect: ", error); }
-                 }
-             }
-        });
-
-        tableBody.addEventListener('change', async (e) => {
-            if (!userId) return;
-            const collectionPath = `artifacts/${appId}/public/data/prospects`;
-            const id = e.target.dataset.id;
-            if (e.target.classList.contains('status-select')) {
-                const newStatus = e.target.value;
-                try { await updateDoc(doc(db, collectionPath, id), { status: newStatus }); } catch(error) { console.error("Error updating status: ", error); }
-            }
-        });
-    </script>
+    Object.values(inputs).forEach(input => input.addEventListener('input', drawChart));
+    drawChart();
+  </script>
 </body>
 </html>
+

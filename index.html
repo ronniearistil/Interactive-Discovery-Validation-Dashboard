@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FinnixPro — Funding Allocation</title>
+  <title>FinnixPro — Dynamic Funding Chart</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -31,7 +31,6 @@
     .input-group {
       display: flex;
       align-items: center;
-      margin-bottom: 1rem;
     }
     .color-box {
       width: 1rem;
@@ -43,6 +42,11 @@
       flex: 1;
       font-weight: 500;
       color: #334155;
+      background: #f9fafb;
+      border: 1px solid #cbd5e1;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.375rem;
+      margin-right: 0.5rem;
     }
     .percent-input {
       width: 60px;
@@ -57,6 +61,14 @@
       font-size: 1rem;
       color: #64748b;
     }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc2626;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-left: 0.75rem;
+    }
     #total-percent-warning {
       color: #dc2626;
       font-weight: 500;
@@ -69,42 +81,16 @@
 <body>
   <div id="chart-container">
     <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">$500k to Ignite GTM Execution</h1>
-    <p class="text-center text-gray-500 mb-8">Pre-seed SAFE funding for an 18-month runway.</p>
+    <p class="text-center text-gray-500 mb-6">Pre-seed SAFE funding for an 18-month runway.</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      <!-- Input Sliders -->
-      <div id="inputs-container">
-        <!-- GTM Strategy -->
-        <div class="input-group">
-          <div class="color-box" style="background-color: #0d9488;"></div>
-          <label for="gtm-input" class="input-label">GTM & Revenue Growth</label>
-          <input type="number" id="gtm-input" class="percent-input" value="40" />
-          <span class="percent-sign">%</span>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <!-- Inputs -->
+      <div>
+        <div id="inputs-container" class="space-y-4"></div>
 
-        <!-- Product Development -->
-        <div class="input-group">
-          <div class="color-box" style="background-color: #2dd4bf;"></div>
-          <label for="product-input" class="input-label">Product Development</label>
-          <input type="number" id="product-input" class="percent-input" value="35" />
-          <span class="percent-sign">%</span>
-        </div>
-
-        <!-- Strategic Hires -->
-        <div class="input-group">
-          <div class="color-box" style="background-color: #5eead4;"></div>
-          <label for="hires-input" class="input-label">Key Strategic Hires</label>
-          <input type="number" id="hires-input" class="percent-input" value="20" />
-          <span class="percent-sign">%</span>
-        </div>
-
-        <!-- Legal & Runway -->
-        <div class="input-group">
-          <div class="color-box" style="background-color: #99f6e4;"></div>
-          <label for="legal-input" class="input-label">Legal, Ops & Runway Buffer</label>
-          <input type="number" id="legal-input" class="percent-input" value="5" />
-          <span class="percent-sign">%</span>
-        </div>
+        <button id="add-category-btn" class="mt-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded w-full">
+          + Add Category
+        </button>
 
         <div id="total-percent-warning">Total must be 100%</div>
       </div>
@@ -123,23 +109,17 @@
   </div>
 
   <script>
-    const inputs = {
-      gtm: document.getElementById('gtm-input'),
-      product: document.getElementById('product-input'),
-      hires: document.getElementById('hires-input'),
-      legal: document.getElementById('legal-input'),
-    };
     const svg = document.getElementById('donut-chart');
     const warning = document.getElementById('total-percent-warning');
+    const container = document.getElementById('inputs-container');
+    const addBtn = document.getElementById('add-category-btn');
+
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
 
-    const colors = {
-      gtm: '#0d9488',
-      product: '#2dd4bf',
-      hires: '#5eead4',
-      legal: '#99f6e4',
-    };
+    const colorPalette = ['#0d9488', '#2dd4bf', '#5eead4', '#99f6e4', '#a5f3fc', '#67e8f9'];
+    let colorIndex = 0;
+    const inputs = [];
 
     function createSegment(offset, dasharray, color) {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -157,32 +137,71 @@
 
     function drawChart() {
       svg.innerHTML = '';
-      const percentages = {
-        gtm: parseFloat(inputs.gtm.value) || 0,
-        product: parseFloat(inputs.product.value) || 0,
-        hires: parseFloat(inputs.hires.value) || 0,
-        legal: parseFloat(inputs.legal.value) || 0,
-      };
+      let total = 0;
+      const slices = [];
 
-      const total = Object.values(percentages).reduce((sum, val) => sum + val, 0);
+      for (const { inputEl, color } of inputs) {
+        const val = parseFloat(inputEl.value) || 0;
+        total += val;
+        slices.push({ val, color });
+      }
+
       warning.style.display = total !== 100 ? 'block' : 'none';
       if (total !== 100) {
         warning.textContent = `Total must be 100% (currently ${total}%)`;
       }
 
-      let accumulatedOffset = 0;
-      for (const key in percentages) {
-        const percent = percentages[key];
-        const dasharray = `${(percent / 100) * circumference} ${circumference}`;
-        const segment = createSegment(-accumulatedOffset, dasharray, colors[key]);
+      let offset = 0;
+      for (const { val, color } of slices) {
+        const dasharray = `${(val / 100) * circumference} ${circumference}`;
+        const segment = createSegment(-offset, dasharray, color);
         svg.appendChild(segment);
-        accumulatedOffset += (percent / 100) * circumference;
+        offset += (val / 100) * circumference;
       }
     }
 
-    Object.values(inputs).forEach(input => input.addEventListener('input', drawChart));
-    drawChart();
+    function addCategory(label = 'New Category', value = 0) {
+      const id = `cat-${Date.now()}`;
+      const color = colorPalette[colorIndex % colorPalette.length];
+      colorIndex++;
+
+      const group = document.createElement('div');
+      group.className = 'input-group';
+
+      group.innerHTML = `
+        <div class="color-box" style="background-color: ${color};"></div>
+        <input type="text" class="input-label" value="${label}" />
+        <input type="number" id="${id}" class="percent-input ml-2" value="${value}" />
+        <span class="percent-sign">%</span>
+        <button class="delete-btn" title="Delete Category">&times;</button>
+      `;
+
+      const inputEl = group.querySelector(`#${id}`);
+      const deleteBtn = group.querySelector('.delete-btn');
+
+      inputEl.addEventListener('input', drawChart);
+      deleteBtn.addEventListener('click', () => {
+        group.remove();
+        const index = inputs.findIndex(item => item.id === id);
+        if (index !== -1) inputs.splice(index, 1);
+        drawChart();
+      });
+
+      container.appendChild(group);
+      inputs.push({ id, inputEl, color });
+
+      drawChart();
+    }
+
+    // Initial categories
+    addCategory('GTM & Revenue Growth', 40);
+    addCategory('Product Development', 35);
+    addCategory('Key Strategic Hires', 20);
+    addCategory('Legal & Ops Buffer', 5);
+
+    addBtn.addEventListener('click', () => addCategory());
   </script>
 </body>
 </html>
+
 

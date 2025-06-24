@@ -7,205 +7,555 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .status-select {
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
-            background-color: white;
-            min-width: 150px;
-        }
-        .tag {
-            display: inline-block;
-            background-color: #e0e7ff;
-            color: #4338ca;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin: 0.125rem;
-        }
-        th { cursor: pointer; }
-        .sort-asc::after { content: ' ▲'; }
-        .sort-desc::after { content: ' ▼'; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdfa; /* A very light teal background */ }
+        .theme-teal { color: #0d9488; } /* Teal-600 */
+        .bg-theme-teal { background-color: #0d9488; }
+        .bg-theme-teal-hover:hover { background-color: #0f766e; } /* Teal-700 */
+        .ring-theme-teal:focus { ring-color: #0d9488; }
+        
+        .kpi-card { background-color: #ffffff; padding: 1rem; border-radius: 0.75rem; text-align: center; border: 1px solid #ccfbf1; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.03); }
+        .tag { display: inline-block; background-color: #f0fdfa; color: #115e59; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; margin: 0.125rem; border: 1px solid #ccfbf1;}
+        
+        td, th { padding: 1rem 1.5rem; }
+        .modal { display: none; }
+        .modal.is-open { display: flex; }
+
+        /* Status Colors */
+        .status-select { border-radius: 0.375rem; padding: 0.25rem 0.5rem; border-width: 1px; font-weight: 500;}
+        .status-Identified { background-color: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        .status-Outreach-Sent { background-color: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+        .status-Scheduled { background-color: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+        .status-Interviewed { background-color: #ccfbf1; color: #047857; border-color: #99f6e4; }
+        .status-Onboarding { background-color: #a7f3d0; color: #065f46; border-color: #6ee7b7; }
+        .status-Declined, .status-No-Response { background-color: #fee2e2; color: #991b1b; border-color: #fecaca;}
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+    <div class="max-w-screen-2xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-200">
         <!-- Header Section -->
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Discovery & Validation Dashboard</h1>
-            <p class="text-gray-600 mt-1">Tracking progress for Phase 1: Customer Discovery & Validation.</p>
+        <div class="mb-6 pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center"><span class="text-2xl font-bold mr-3 rounded-md bg-teal-600 p-2 text-white">fp</span>FinnixPro Discovery Dashboard</h1>
+            <p class="text-gray-600 mt-1">A real-time dashboard to track Phase 1 progress. Data is saved automatically.</p>
         </div>
 
         <!-- KPI Dashboard -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-            <div class="bg-gray-100 p-4 rounded-lg">
-                <p class="text-sm font-medium text-gray-500">Total Prospects</p>
-                <p id="kpi-total" class="text-2xl font-bold text-gray-800">0</p>
-            </div>
-            <div class="bg-blue-100 p-4 rounded-lg">
-                <p class="text-sm font-medium text-blue-600">Interviews Completed</p>
-                <p id="kpi-interviews" class="text-2xl font-bold text-blue-800">0</p>
-            </div>
-            <div class="bg-green-100 p-4 rounded-lg">
-                <p class="text-sm font-medium text-green-600">Paying Customers</p>
-                <p id="kpi-customers" class="text-2xl font-bold text-green-800">0</p>
-            </div>
-            <div class="bg-emerald-100 p-4 rounded-lg">
-                <p class="text-sm font-medium text-emerald-600">MRR</p>
-                <p id="kpi-mrr" class="text-2xl font-bold text-emerald-800">$0</p>
-            </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Total Prospects</p><p id="kpi-total" class="text-3xl font-bold text-gray-800">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Interviews Done</p><p id="kpi-interviews" class="text-3xl font-bold theme-teal">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Paying Customers</p><p id="kpi-customers" class="text-3xl font-bold theme-teal">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Current MRR</p><p id="kpi-mrr" class="text-3xl font-bold theme-teal">$0</p></div>
         </div>
-
-        <!-- Controls: Search and Add New -->
-        <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
-            <div class="relative w-full md:w-1/3">
-                <input type="text" id="search-input" placeholder="Search by name, company, or tag..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <svg class="w-5 h-5 text-gray-400 absolute top-1/2 left-3 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
-            <button id="add-row-btn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        
+        <!-- Controls -->
+        <div class="flex justify-end items-center mb-4">
+            <button id="add-prospect-btn" class="bg-theme-teal text-white font-semibold px-5 py-2 rounded-lg bg-theme-teal-hover focus:outline-none focus:ring-2 ring-theme-teal focus:ring-offset-2 transition-all shadow-sm hover:shadow-md">
                 + Add New Prospect
             </button>
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th data-sort="prospectName" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prospect Name</th>
-                        <th data-sort="company" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                        <th data-sort="status" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th data-sort="interviewDate" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interview Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key Pain Points</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verbatim Quote</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Paying?</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prospect</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interview Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Follow-up</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pain Points</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="bg-white divide-y divide-gray-200">
-                    <!-- Rows will be dynamically inserted here -->
+                    <!-- Dynamic Rows -->
                 </tbody>
             </table>
         </div>
     </div>
 
-    <script>
-        const initialData = [
-            { id: 1, prospectName: 'Jane Doe', company: 'Bright Agency', role: 'Founder', source: 'Waitlist', status: 'Interviewed', interviewDate: '2025-07-15', tags: 'Reporting Delays, Spreadsheet Hell, Margin Tracking', quote: 'I feel like I\'m driving by looking in the rearview mirror. I don\'t know I\'ve lost money until the month is over.', mvp: true, paying: true, mrr: 29 },
-            { id: 2, prospectName: 'John Smith', company: 'Code Consultants', role: 'Head of Delivery', source: 'LinkedIn', status: 'Scheduled', interviewDate: '2025-07-18', tags: 'Budget Overruns, Scope Creep', quote: '', mvp: false, paying: false, mrr: 0 },
-            { id: 3, prospectName: 'Emily White', company: 'DesignCo', role: 'Project Manager', source: 'Waitlist', status: 'Outreach Sent', interviewDate: '', tags: '', quote: '', mvp: false, paying: false, mrr: 0 },
-            { id: 4, prospectName: 'David Green', company: 'Innovate Solutions', role: 'COO', source: 'Referral', status: 'No Response', interviewDate: '', tags: 'Forecasting', quote: '', mvp: false, paying: false, mrr: 0 }
-        ];
+    <!-- Add/Edit Modal -->
+    <div id="prospect-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center">
+        <div class="relative mx-auto p-8 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="text-left">
+                <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6">Add New Prospect</h3>
+                <form id="prospect-form" class="space-y-4">
+                    <input type="hidden" id="prospect-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-medium text-gray-700">Prospect Name</label><input required type="text" id="prospectName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Role / Title</label><input type="text" id="role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    </div>
+                     <div><label class="block text-sm font-medium text-gray-700">Company</label><input type="text" id="company" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div><label class="block text-sm font-medium text-gray-700">Interview Date</label><input type="date" id="interviewDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                         <div><label class="block text-sm font-medium text-gray-700">Next Follow-up Date</label><input type="date" id="followUpDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    </div>
+                    <div><label class="block text-sm font-medium text-gray-700">Pain Points (comma-separated)</label><input type="text" id="tags" placeholder="e.g., Reporting Delays, Spreadsheet Hell" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Verbatim Quote</label><textarea id="quote" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></textarea></div>
+                    <div class="flex items-center space-x-4 pt-2">
+                        <label for="paying" class="flex items-center text-sm font-medium text-gray-700">
+                            <input type="checkbox" id="paying" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                            <span class="ml-2">Is Paying Customer?</span>
+                        </label>
+                        <div><label class="block text-sm font-medium text-gray-700">MRR ($)</label><input type="number" id="mrr" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    </div>
+                    <div class="pt-4 flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="bg-theme-teal text-white font-semibold px-4 py-2 rounded-lg bg-theme-teal-hover">Save Prospect</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-        let tableData = [...initialData];
-        let sortConfig = { key: null, direction: 'ascending' };
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const tableBody = document.getElementById('table-body');
-        const addRowBtn = document.getElementById('add-row-btn');
-        const searchInput = document.getElementById('search-input');
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let userId;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                setupRealtimeListener();
+            } else {
+                try {
+                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                     } else {
+                        await signInAnonymously(auth);
+                     }
+                } catch (error) { console.error("Authentication failed:", error); }
+            }
+        });
 
         const statusOptions = ['Identified', 'Outreach Sent', 'Scheduled', 'Interviewed', 'Onboarding', 'Declined', 'No Response'];
+        let prospectData = [];
 
+        const tableBody = document.getElementById('table-body');
+        const modal = document.getElementById('prospect-modal');
+        const prospectForm = document.getElementById('prospect-form');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const addProspectBtn = document.getElementById('add-prospect-btn');
+        const modalTitle = document.getElementById('modal-title');
+
+        function setupRealtimeListener() {
+            if (!userId) return;
+            const collectionPath = `artifacts/${appId}/public/data/prospects`;
+            onSnapshot(collection(db, collectionPath), (snapshot) => {
+                prospectData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                prospectData.sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                renderTable();
+                updateKPIs();
+            });
+        }
+        
         function renderTable() {
-            const searchTerm = searchInput.value.toLowerCase();
-            let filteredData = tableData.filter(item =>
-                item.prospectName.toLowerCase().includes(searchTerm) ||
-                item.company.toLowerCase().includes(searchTerm) ||
-                item.tags.toLowerCase().includes(searchTerm)
-            );
-            
-            if (sortConfig.key) {
-                filteredData.sort((a, b) => {
-                    if (a[sortConfig.key] < b[sortConfig.key]) {
-                        return sortConfig.direction === 'ascending' ? -1 : 1;
-                    }
-                    if (a[sortConfig.key] > b[sortConfig.key]) {
-                        return sortConfig.direction === 'ascending' ? 1 : -1;
-                    }
-                    return 0;
-                });
-            }
-
             tableBody.innerHTML = '';
-            filteredData.forEach(item => {
+            prospectData.forEach(item => {
                 const row = document.createElement('tr');
+                const statusClass = `status-${(item.status || '').replace(' ', '-')}`;
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${item.prospectName}</div><div class="text-sm text-gray-500">${item.role}</div></td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.company}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <select class="status-select" data-id="${item.id}">
+                    <td class="align-top"><div class="text-sm font-semibold text-gray-900">${item.prospectName || ''}</div><div class="text-xs text-gray-500">${item.role || ''}</div></td>
+                    <td class="align-top text-sm text-gray-600">${item.company || ''}</td>
+                    <td class="align-top">
+                        <select class="status-select w-full text-sm ${statusClass}" data-id="${item.id}">
                             ${statusOptions.map(opt => `<option value="${opt}" ${item.status === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                         </select>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.interviewDate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${item.tags.split(',').map(tag => tag.trim() ? `<span class="tag">${tag.trim()}</span>` : '').join('')}</td>
-                    <td class="px-6 py-4"><div class="text-sm text-gray-700 max-w-xs truncate" title="${item.quote}">${item.quote}</div></td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <input type="checkbox" data-id="${item.id}" class="paying-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" ${item.paying ? 'checked' : ''}>
+                    <td class="align-top text-sm text-gray-600">${item.interviewDate || ''}</td>
+                    <td class="align-top text-sm text-gray-600">${item.followUpDate || ''}</td>
+                    <td class="align-top">${(item.tags || '').split(',').map(tag => tag.trim() ? `<span class="tag">${tag.trim()}</span>` : '').join('')}</td>
+                    <td class="align-top text-center space-x-2">
+                        <button class="edit-btn text-teal-600 hover:text-teal-900 text-sm font-medium" data-id="${item.id}">Edit</button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 text-sm font-medium" data-id="${item.id}">Delete</button>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
-
-            updateKPIs();
         }
 
         function updateKPIs() {
-            document.getElementById('kpi-total').textContent = tableData.length;
-            document.getElementById('kpi-interviews').textContent = tableData.filter(d => d.status === 'Interviewed').length;
-            const payingCustomers = tableData.filter(d => d.paying);
-            document.getElementById('kpi-customers').textContent = payingCustomers.length;
-            const totalMRR = payingCustomers.reduce((sum, item) => sum + item.mrr, 0);
-            document.getElementById('kpi-mrr').textContent = `$${totalMRR}`;
+             document.getElementById('kpi-total').textContent = prospectData.length;
+             document.getElementById('kpi-interviews').textContent = prospectData.filter(d => d.status === 'Interviewed').length;
+             const payingCustomers = prospectData.filter(d => d.paying);
+             document.getElementById('kpi-customers').textContent = payingCustomers.length;
+             const totalMRR = payingCustomers.reduce((sum, item) => sum + (item.mrr || 0), 0);
+             document.getElementById('kpi-mrr').textContent = `$${totalMRR}`;
         }
 
-        addRowBtn.addEventListener('click', () => {
-            const newId = tableData.length > 0 ? Math.max(...tableData.map(item => item.id)) + 1 : 1;
-            tableData.unshift({
-                id: newId, prospectName: 'New Prospect', company: 'Company Name', role: 'Role', source: 'Manual', status: 'Identified', interviewDate: '', tags: '', quote: '', mvp: false, paying: false, mrr: 0
-            });
-            renderTable();
-        });
-
-        tableBody.addEventListener('change', (e) => {
-            const id = parseInt(e.target.dataset.id);
-            const item = tableData.find(d => d.id === id);
-            if (e.target.classList.contains('status-select')) {
-                item.status = e.target.value;
-            } else if (e.target.classList.contains('paying-checkbox')) {
-                item.paying = e.target.checked;
-                item.mrr = item.paying ? 29 : 0; // Simplified assumption
+        function openModal(prospect = null) {
+            prospectForm.reset();
+            if (prospect) {
+                modalTitle.textContent = 'Edit Prospect';
+                document.getElementById('prospect-id').value = prospect.id;
+                document.getElementById('prospectName').value = prospect.prospectName || '';
+                document.getElementById('role').value = prospect.role || '';
+                document.getElementById('company').value = prospect.company || '';
+                document.getElementById('interviewDate').value = prospect.interviewDate || '';
+                document.getElementById('followUpDate').value = prospect.followUpDate || '';
+                document.getElementById('tags').value = prospect.tags || '';
+                document.getElementById('quote').value = prospect.quote || '';
+                document.getElementById('paying').checked = prospect.paying || false;
+                document.getElementById('mrr').value = prospect.mrr || 0;
+            } else {
+                modalTitle.textContent = 'Add New Prospect';
+                document.getElementById('prospect-id').value = '';
             }
-            renderTable();
-        });
-        
-        searchInput.addEventListener('input', renderTable);
-        
-        document.querySelectorAll('th[data-sort]').forEach(th => {
-            th.addEventListener('click', () => {
-                const key = th.dataset.sort;
-                if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-                    sortConfig.direction = 'descending';
+            modal.classList.add('is-open');
+        }
+
+        function closeModal() { modal.classList.remove('is-open'); }
+
+        addProspectBtn.addEventListener('click', () => openModal());
+        cancelBtn.addEventListener('click', closeModal);
+
+        prospectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) { console.error("User not authenticated."); return; }
+            const collectionPath = `artifacts/${appId}/public/data/prospects`;
+            const id = document.getElementById('prospect-id').value;
+            const data = {
+                prospectName: document.getElementById('prospectName').value,
+                role: document.getElementById('role').value,
+                company: document.getElementById('company').value,
+                interviewDate: document.getElementById('interviewDate').value,
+                followUpDate: document.getElementById('followUpDate').value,
+                tags: document.getElementById('tags').value,
+                quote: document.getElementById('quote').value,
+                paying: document.getElementById('paying').checked,
+                mrr: parseFloat(document.getElementById('mrr').value) || 0,
+                status: prospectData.find(p=>p.id === id)?.status || 'Identified',
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, collectionPath, id), data);
                 } else {
-                    sortConfig.direction = 'ascending';
+                    data.createdAt = serverTimestamp();
+                    await addDoc(collection(db, collectionPath), data);
                 }
-                sortConfig.key = key;
-                
-                document.querySelectorAll('th[data-sort]').forEach(header => {
-                    header.classList.remove('sort-asc', 'sort-desc');
-                });
-                th.classList.add(sortConfig.direction === 'ascending' ? 'sort-asc' : 'sort-desc');
-
-                renderTable();
-            });
+                closeModal();
+            } catch (error) { console.error("Error saving prospect:", error); }
         });
 
-        renderTable();
+        tableBody.addEventListener('click', async (e) => {
+             if (!userId) return;
+             const collectionPath = `artifacts/${appId}/public/data/prospects`;
+             const id = e.target.dataset.id;
+             if (e.target.classList.contains('edit-btn')) { openModal(prospectData.find(p => p.id === id)); }
+             if (e.target.classList.contains('delete-btn')) {
+                 if (confirm('Are you sure you want to delete this prospect?')) {
+                     try { await deleteDoc(doc(db, collectionPath, id)); } catch(error) { console.error("Error deleting prospect: ", error); }
+                 }
+             }
+        });
+
+        tableBody.addEventListener('change', async (e) => {
+            if (!userId) return;
+            const collectionPath = `artifacts/${appId}/public/data/prospects`;
+            const id = e.target.dataset.id;
+            if (e.target.classList.contains('status-select')) {
+                const newStatus = e.target.value;
+                try { await updateDoc(doc(db, collectionPath, id), { status: newStatus }); } catch(error) { console.error("Error updating status: ", error); }
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+***
+
+And now, as requested, here is the brand new **Investor Tracker** dashboard. It is built with all the fields you outlined and follows the same professional, themed design. This tool will be your command center for managing your fundraising process efficiently.
+
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinnixPro - Investor Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdfa; }
+        .theme-teal { color: #0d9488; }
+        .bg-theme-teal { background-color: #0d9488; }
+        .bg-theme-teal-hover:hover { background-color: #0f766e; }
+        .ring-theme-teal:focus { ring-color: #0d9488; }
+        
+        .kpi-card { background-color: #ffffff; padding: 1rem; border-radius: 0.75rem; text-align: center; border: 1px solid #ccfbf1; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.03); }
+        .tag { display: inline-block; background-color: #f0fdfa; color: #115e59; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; margin: 0.125rem; border: 1px solid #ccfbf1;}
+        
+        td, th { padding: 1rem 1.5rem; }
+        .modal { display: none; }
+        .modal.is-open { display: flex; }
+
+        /* Status Colors */
+        .status-select { border-radius: 0.375rem; padding: 0.25rem 0.5rem; border-width: 1px; font-weight: 500;}
+        .stage-Identified, .stage-Cold-Outreach { background-color: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        .stage-Warm-Intro { background-color: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+        .stage-First-Meeting { background-color: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+        .stage-Follow-up { background-color: #ccfbf1; color: #047857; border-color: #99f6e4; }
+        .stage-Due-Diligence { background-color: #a7f3d0; color: #065f46; border-color: #6ee7b7; }
+        .stage-Committed { background-color: #86efac; color: #166534; border-color: #4ade80;}
+        .stage-Passed { background-color: #fee2e2; color: #991b1b; border-color: #fecaca;}
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-screen-2xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+        <!-- Header -->
+        <div class="mb-6 pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center"><span class="text-2xl font-bold mr-3 rounded-md bg-teal-600 p-2 text-white">fp</span>Investor Fundraising Tracker</h1>
+            <p class="text-gray-600 mt-1">Manage your fundraising pipeline. All data is saved automatically in real-time.</p>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Total Investors</p><p id="kpi-total" class="text-3xl font-bold text-gray-800">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Meetings Held</p><p id="kpi-meetings" class="text-3xl font-bold theme-teal">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">In Due Diligence</p><p id="kpi-diligence" class="text-3xl font-bold theme-teal">0</p></div>
+            <div class="kpi-card"><p class="text-sm font-medium text-gray-500">Committed ($)</p><p id="kpi-committed" class="text-3xl font-bold theme-teal">$0</p></div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="flex justify-end items-center mb-4">
+            <button id="add-investor-btn" class="bg-theme-teal text-white font-semibold px-5 py-2 rounded-lg bg-theme-teal-hover focus:outline-none focus:ring-2 ring-theme-teal focus:ring-offset-2 transition-all shadow-sm hover:shadow-md">
+                + Add New Investor
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Investor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Firm</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outreach Stage</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Contact</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Follow-up</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Dynamic Rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="investor-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center">
+        <div class="relative mx-auto p-8 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6">Add New Investor</h3>
+            <form id="investor-form" class="space-y-4">
+                <input type="hidden" id="investor-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Investor Name</label><input required type="text" id="investorName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    <div><label class="block text-sm font-medium">Firm Name</label><input type="text" id="firmName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Email</label><input type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    <div><label class="block text-sm font-medium">Phone Number</label><input type="tel" id="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Stage Focus</label><input type="text" id="stageFocus" placeholder="e.g. Pre-seed, Seed" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    <div><label class="block text-sm font-medium">Sector Focus</label><input type="text" id="sectorFocus" placeholder="e.g. B2B SaaS, FinTech" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                </div>
+                 <div><label class="block text-sm font-medium">Why They're a Fit</label><input type="text" id="fit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Last Contact Date</label><input type="date" id="lastContactDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                    <div><label class="block text-sm font-medium">Next Follow-up Date</label><input type="date" id="followUpDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></div>
+                </div>
+                <div><label class="block text-sm font-medium">Notes</label><textarea id="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"></textarea></div>
+                 <div class="flex items-center space-x-4 pt-2">
+                    <label class="block text-sm font-medium">Committed Amount ($)</label>
+                    <input type="number" id="committedAmount" placeholder="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="bg-theme-teal text-white font-semibold px-4 py-2 rounded-lg bg-theme-teal-hover">Save Investor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let userId;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                setupRealtimeListener();
+            } else {
+                try {
+                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                     } else {
+                        await signInAnonymously(auth);
+                     }
+                } catch (error) { console.error("Authentication failed:", error); }
+            }
+        });
+
+        const outreachStages = ['Identified', 'Cold Outreach', 'Warm Intro', 'First Meeting', 'Follow-up', 'Due Diligence', 'Committed', 'Passed'];
+        let investorData = [];
+
+        const tableBody = document.getElementById('table-body');
+        const modal = document.getElementById('investor-modal');
+        const investorForm = document.getElementById('investor-form');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const addInvestorBtn = document.getElementById('add-investor-btn');
+        const modalTitle = document.getElementById('modal-title');
+
+        function setupRealtimeListener() {
+            if (!userId) return;
+            const collectionPath = `artifacts/${appId}/public/data/investors`;
+            onSnapshot(collection(db, collectionPath), (snapshot) => {
+                investorData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                investorData.sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                renderTable();
+                updateKPIs();
+            });
+        }
+        
+        function renderTable() {
+            tableBody.innerHTML = '';
+            investorData.forEach(item => {
+                const row = document.createElement('tr');
+                const stageClass = `stage-${(item.stage || '').replace(/ /g, '-')}`;
+                row.innerHTML = `
+                    <td class="align-top"><div class="text-sm font-semibold text-gray-900">${item.investorName || ''}</div><div class="text-xs text-gray-500">${item.email || ''}</div></td>
+                    <td class="align-top text-sm text-gray-600">${item.firmName || ''}</td>
+                    <td class="align-top">
+                        <select class="status-select w-full text-sm ${stageClass}" data-id="${item.id}">
+                            ${outreachStages.map(opt => `<option value="${opt}" ${item.stage === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="align-top text-sm text-gray-600">${item.lastContactDate || ''}</td>
+                    <td class="align-top text-sm text-gray-600">${item.followUpDate || ''}</td>
+                    <td class="align-top"><div class="text-sm text-gray-700 max-w-xs truncate" title="${item.notes || ''}">${item.notes || ''}</div></td>
+                    <td class="align-top text-center space-x-2">
+                        <button class="edit-btn text-teal-600 hover:text-teal-900 text-sm font-medium" data-id="${item.id}">Edit</button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 text-sm font-medium" data-id="${item.id}">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpi-total').textContent = investorData.length;
+            document.getElementById('kpi-meetings').textContent = investorData.filter(d => ['First Meeting', 'Follow-up', 'Due Diligence', 'Committed'].includes(d.stage)).length;
+            document.getElementById('kpi-diligence').textContent = investorData.filter(d => d.stage === 'Due Diligence').length;
+            const totalCommitted = investorData.reduce((sum, item) => sum + (item.committedAmount || 0), 0);
+            document.getElementById('kpi-committed').textContent = `$${totalCommitted.toLocaleString()}`;
+        }
+
+        function openModal(investor = null) {
+            investorForm.reset();
+            if (investor) {
+                modalTitle.textContent = 'Edit Investor';
+                document.getElementById('investor-id').value = investor.id;
+                document.getElementById('investorName').value = investor.investorName || '';
+                document.getElementById('firmName').value = investor.firmName || '';
+                document.getElementById('email').value = investor.email || '';
+                document.getElementById('phone').value = investor.phone || '';
+                document.getElementById('stageFocus').value = investor.stageFocus || '';
+                document.getElementById('sectorFocus').value = investor.sectorFocus || '';
+                document.getElementById('fit').value = investor.fit || '';
+                document.getElementById('lastContactDate').value = investor.lastContactDate || '';
+                document.getElementById('followUpDate').value = investor.followUpDate || '';
+                document.getElementById('notes').value = investor.notes || '';
+                document.getElementById('committedAmount').value = investor.committedAmount || 0;
+            } else {
+                modalTitle.textContent = 'Add New Investor';
+                document.getElementById('investor-id').value = '';
+            }
+            modal.classList.add('is-open');
+        }
+
+        function closeModal() { modal.classList.remove('is-open'); }
+
+        addInvestorBtn.addEventListener('click', () => openModal());
+        cancelBtn.addEventListener('click', closeModal);
+
+        investorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) { console.error("User not authenticated."); return; }
+            const collectionPath = `artifacts/${appId}/public/data/investors`;
+            const id = document.getElementById('investor-id').value;
+            const data = {
+                investorName: document.getElementById('investorName').value,
+                firmName: document.getElementById('firmName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                stageFocus: document.getElementById('stageFocus').value,
+                sectorFocus: document.getElementById('sectorFocus').value,
+                fit: document.getElementById('fit').value,
+                lastContactDate: document.getElementById('lastContactDate').value,
+                followUpDate: document.getElementById('followUpDate').value,
+                notes: document.getElementById('notes').value,
+                committedAmount: parseFloat(document.getElementById('committedAmount').value) || 0,
+                stage: investorData.find(p=>p.id === id)?.stage || 'Identified',
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, collectionPath, id), data);
+                } else {
+                    data.createdAt = serverTimestamp();
+                    await addDoc(collection(db, collectionPath), data);
+                }
+                closeModal();
+            } catch (error) { console.error("Error saving investor:", error); }
+        });
+
+        tableBody.addEventListener('click', async (e) => {
+             if (!userId) return;
+             const collectionPath = `artifacts/${appId}/public/data/investors`;
+             const id = e.target.dataset.id;
+             if (e.target.classList.contains('edit-btn')) { openModal(investorData.find(p => p.id === id)); }
+             if (e.target.classList.contains('delete-btn')) {
+                 if (confirm('Are you sure you want to delete this investor?')) {
+                     try { await deleteDoc(doc(db, collectionPath, id)); } catch(error) { console.error("Error deleting investor: ", error); }
+                 }
+             }
+        });
+        
+        tableBody.addEventListener('change', async (e) => {
+            if (!userId) return;
+            const collectionPath = `artifacts/${appId}/public/data/investors`;
+            const id = e.target.dataset.id;
+            if (e.target.classList.contains('status-select')) {
+                const newStage = e.target.value;
+                try { await updateDoc(doc(db, collectionPath, id), { stage: newStage }); } catch(error) { console.error("Error updating stage: ", error); }
+            }
+        });
+
     </script>
 </body>
 </html>
